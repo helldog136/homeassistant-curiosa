@@ -1,0 +1,106 @@
+Curiosa License, Version 1.0
+
+Copyright (c) 2026 Helldog136 (https://helldog136.be). All rights reserved except as granted below.
+
+"Curiosa" or the "Software" means this program, its source code, its documentation and
+the modules distributed with it in the "src/modules-builtin" directory. "You" means the
+person or organization exercising the rights granted here. "Licensor" means Helldog136.
+
+1. GRANT OF RIGHTS
+
+Subject to the conditions below, the Licensor grants You a worldwide, royalty-free,
+non-exclusive, non-transferable right to use, copy, modify and redistribute the Software
+and your modifications ("Derivative Works").
+
+2. WHAT YOU MAY ALWAYS DO
+
+a. Run the Software to operate a website for yourself or for your own activity, including
+   a commercial or profit-making activity (for example a creator, a business, an
+   association or a freelancer running their own site, selling their own products or
+   services, earning from sponsors, donations or advertising on that site).
+b. Study the code, modify it for your own needs, and contribute improvements back.
+c. Build, set up, customize, maintain and host a website for a specific client and charge
+   for that work, provided the client is not charged for the Software itself and the
+   Software is not presented as your own product.
+d. Write modules for the Software (see section 6).
+e. Provide hosting infrastructure on which a customer's own, independent installation of the
+   Software runs (for example a VPS or hosting plan with the Software preinstalled or
+   installable in one click), and charge for that infrastructure, its support and its
+   maintenance, provided that: (i) each installation is a separate instance that the
+   customer fully controls (administrator access, own data, ability to export it);
+   (ii) the price pays for the infrastructure and services, not for the Software itself;
+   and (iii) the Software is not presented as the provider's own product and the notices of
+   section 4 remain in place.
+
+3. WHAT YOU MAY NOT DO
+
+a. Sell the Software or any Derivative Work, license it for a fee, or otherwise charge for
+   access to the Software or a Derivative Work as such (including bundling it into a paid
+   product, template, theme or subscription whose value comes from the Software).
+b. Offer the Software or a Derivative Work to third parties as a multi-tenant or white-label
+   service or platform (for example one installation serving the sites of many customers,
+   or a service whose paid product is access to the Software's features rather than
+   infrastructure as described in section 2e).
+c. Present the Software or a Derivative Work as your own creation, or remove, hide or alter
+   the notices described in section 4.
+
+4. ATTRIBUTION
+
+Anyone who uses, runs or redistributes the Software must be able to tell that it was
+developed by the Licensor. Therefore You must:
+a. keep this license, all copyright and author notices and the "LICENSE" file in every copy
+   or substantial portion of the Software you distribute, including Derivative Works;
+b. keep the credit line "Powered by Curiosa", where "Curiosa" is a link to the project
+   repository (https://github.com/helldog136/Curiosa), displayed on every public page of a
+   site that runs the Software or a Derivative Work, in the form provided by the Software
+   or an equally visible one;
+c. mark your modifications as such, and not suggest that the Licensor endorses them.
+
+5. OWNERSHIP AND DERIVATIVE WORKS
+
+The Software remains the property of the Licensor; this license transfers no ownership.
+If You distribute a Derivative Work, you must do so under this same license, and the
+parts that come from the Software remain the property of the Licensor. You keep the
+rights to the parts that You wrote yourself. Contributions sent to the Licensor may be
+subject to a separate contributor agreement.
+
+6. THIRD-PARTY MODULES
+
+A module that extends the Software only through its public module interface (the
+"module.json" manifest and the module API) and does not copy code from the Software is a
+separate work. This license does not apply to it: its author chooses its license, keeps
+full credit for it, and may sell it, free of the restrictions of section 3. Modules and
+examples distributed in the "modules-community" and "modules-examples" directories carry
+the license declared in their own "module.json".
+
+7. THIRD-PARTY COMPONENTS
+
+The Software depends on third-party components that remain under their own licenses, listed
+in THIRD-PARTY-NOTICES.md.
+
+8. EARLIER VERSIONS
+
+Versions of the Software released before version 0.1.2-rc.4 were published under the MIT
+license. Copies of those versions received under the MIT license remain available under
+that license; this license applies to version 0.1.2-rc.4 and every later version.
+
+9. TERMINATION
+
+If You violate this license, your rights end automatically. They are reinstated if You stop
+the violation and correct it within 30 days of becoming aware of it. Licensor may also
+grant you written permission for something this license forbids (for example a commercial
+arrangement); such permission must be in writing.
+
+10. NO WARRANTY AND LIMITATION OF LIABILITY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+11. GENERAL
+
+If a provision is unenforceable, the rest of this license remains in force. Belgian law
+applies, and the courts of Belgium have jurisdiction, unless mandatory law provides
+otherwise.

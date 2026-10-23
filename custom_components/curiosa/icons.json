@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "switch": {
+      "enabled": {
+        "default": "mdi:power-plug",
+        "state": {
+          "off": "mdi:power-plug-off"
+        }
+      }
+    },
+    "sensor": {
+      "connection": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "ready": "mdi:check-network",
+          "waiting_stream": "mdi:sleep",
+          "paused_site": "mdi:pause-circle",
+          "paused_here": "mdi:power-plug-off",
+          "problem": "mdi:lan-disconnect"
+        }
+      },
+      "last_action": {
+        "default": "mdi:gift"
+      }
+    },
+    "binary_sensor": {
+      "connected": {
+        "default": "mdi:lan-connect"
+      },
+      "live": {
+        "default": "mdi:video-wireless",
+        "state": {
+          "off": "mdi:video-wireless-outline"
+        }
+      }
+    }
+  }
+}
