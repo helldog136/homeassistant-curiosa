@@ -31,6 +31,7 @@ class FakeCuriosa:
         self.queue: list[dict[str, Any]] = []
         self.requests: list[dict[str, Any]] = []
         self.acks: list[dict[str, Any]] = []
+        self.catalog: Any = None  # None = ancien site (champ absent)
         self.pull_status: int | None = None
         self.retry_after: str | None = None
         self.ack_status = 200
@@ -109,15 +110,16 @@ class FakeCuriosa:
         now = datetime.now(UTC) + self.server_time_offset
         actions = list(self.queue) if self.enabled and self.live else []
         self.cursor += 1
-        return web.json_response(
-            {
-                "enabled": self.enabled,
-                "live": self.live,
-                "serverTime": iso(now),
-                "cursor": self.cursor,
-                "actions": actions[:10],
-            }
-        )
+        payload: dict[str, Any] = {
+            "enabled": self.enabled,
+            "live": self.live,
+            "serverTime": iso(now),
+            "cursor": self.cursor,
+            "actions": actions[:10],
+        }
+        if self.catalog is not None:
+            payload["catalog"] = self.catalog
+        return web.json_response(payload)
 
     async def ack(self, request: web.Request) -> web.Response:
         body = await self._log(request)

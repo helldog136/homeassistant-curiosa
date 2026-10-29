@@ -44,6 +44,7 @@ async def async_get_config_entry_diagnostics(
             }
             for line in bindings
         ],
+        "catalog_size": len(coordinator.catalog),
         "tts_configured": bool(
             entry.options.get(OPT_TTS_PLAYER) and entry.options.get(OPT_TTS_ENGINE)
         ),
