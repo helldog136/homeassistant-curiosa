@@ -110,3 +110,12 @@ def test_texts_for_emma_use_plain_words() -> None:
         text = " ".join(values).lower()
         for word in banned:
             assert word not in text, (lang, word)
+
+
+def test_fixable_issue_has_no_plain_description() -> None:
+    """Regle de hassfest : un probleme corrigeable a un fix_flow, pas de description."""
+    for lang in ("en", "fr"):
+        issues = load(f"translations/{lang}.json")["issues"]
+        assert "description" not in issues["unmapped_action"]
+        assert "fix_flow" not in issues["unmapped_voice"]
+        assert issues["unmapped_voice"]["description"].strip()

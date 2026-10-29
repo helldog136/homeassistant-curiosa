@@ -165,12 +165,11 @@
   "issues": {
     "unmapped_action": {
       "title": "A reward asks for \"{action}\" but no script is linked",
-      "description": "Your site asked for \"{action}\", but nothing is linked to this action at home: nothing happened. Press \"Fix\" to choose a script or a scene. You can also go to Settings > Devices & services > Curiosa > Configure.",
       "fix_flow": {
         "step": {
           "init": {
             "title": "Link \"{action}\"",
-            "description": "Choose the script or scene that starts when \"{action}\" arrives. Example: script.vacuum",
+            "description": "Choose the script or scene that starts when \"{action}\" arrives. Example: script.vacuum You can also link your actions in Settings > Devices & services > Curiosa > Configure.",
             "data": {
               "entity_id": "Script or scene"
             },

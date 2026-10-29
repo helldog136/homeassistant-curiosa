@@ -165,12 +165,11 @@
   "issues": {
     "unmapped_action": {
       "title": "Une récompense demande « {action} » mais aucun script n'est relié",
-      "description": "Ton site a demandé « {action} », mais rien n'est relié à cette action chez toi : il ne s'est rien passé. Appuie sur « Corriger » pour choisir un script ou une scène. Tu peux aussi aller dans Paramètres > Appareils et services > Curiosa > Configurer.",
       "fix_flow": {
         "step": {
           "init": {
             "title": "Relier « {action} »",
-            "description": "Choisis le script ou la scène qui se lance quand « {action} » arrive. Exemple : script.aspirateur",
+            "description": "Choisis le script ou la scène qui se lance quand « {action} » arrive. Exemple : script.aspirateur Tu peux aussi relier tes actions dans Paramètres > Appareils et services > Curiosa > Configurer.",
             "data": {
               "entity_id": "Script ou scène"
             },
