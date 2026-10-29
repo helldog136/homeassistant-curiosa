@@ -7,7 +7,12 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -25,12 +30,14 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import (
+    CatalogItem,
     CuriosaApi,
     CuriosaConnectionError,
     CuriosaError,
     CuriosaHttpError,
     CuriosaPairError,
 )
+from .bindings import binding_lines, is_bindable, linked_entity, with_binding
 from .const import (
     BINDABLE_DOMAINS,
     CONF_CODE,
@@ -43,6 +50,7 @@ from .const import (
     DOMAIN,
     KEY_RE,
     MAX_BINDINGS,
+    OPT_ACTION,
     OPT_BINDINGS,
     OPT_ENTITY,
     OPT_KEY,
@@ -54,8 +62,8 @@ from .const import (
     OPT_TTS_VOLUME,
     TTS_KEY_PREFIX,
 )
-from .coordinator import CuriosaConfigEntry
-from .sanitize import AddressError, normalize_code, parse_site_address
+from .coordinator import CuriosaConfigEntry, async_stored_catalog
+from .sanitize import AddressError, normalize_code, parse_site_address, site_root
 
 _LANGUAGE_RE = re.compile(r"^[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})?$")
 
@@ -166,33 +174,170 @@ class CuriosaConfigFlow(ConfigFlow, domain=DOMAIN):
         return CuriosaOptionsFlow()
 
 
-def _lines(options: Mapping[str, Any]) -> list[dict[str, str]]:
-    return [dict(line) for line in options.get(OPT_BINDINGS, [])]
+_TEXTS: dict[str, dict[str, str]] = {
+    "fr": {
+        "linked": "reliée à {entity}",
+        "free": "pas encore reliée",
+        "voice_ready": "voix réglée",
+        "voice_missing": "voix pas encore réglée (voir « Voix »)",
+        "old": "ancienne liaison",
+    },
+    "en": {
+        "linked": "linked to {entity}",
+        "free": "not linked yet",
+        "voice_ready": "voice set up",
+        "voice_missing": 'voice not set up yet (see "Voice")',
+        "old": "old link",
+    },
+}
 
 
 class CuriosaOptionsFlow(OptionsFlow):
-    """Liaison « cle d'action -> scene ou script » et reglage de la voix."""
+    """Liaison « action -> script ou scene » (par son nom) et reglage de la voix."""
 
     config_entry: CuriosaConfigEntry
 
+    def __init__(self) -> None:
+        self._catalog: list[CatalogItem] = []
+        self._key = ""
+
+    # --- aides --------------------------------------------------------------
+    def _text(self, name: str, **values: str) -> str:
+        language = "fr" if str(self.hass.config.language).startswith("fr") else "en"
+        return _TEXTS[language][name].format(**values)
+
+    async def _load_catalog(self) -> None:
+        entry = self.config_entry
+        if entry.state is ConfigEntryState.LOADED:
+            self._catalog = list(entry.runtime_data.catalog)
+        else:
+            self._catalog = await async_stored_catalog(self.hass, entry.entry_id)
+
+    def _site(self) -> str:
+        return site_root(self.config_entry.data[CONF_URL])
+
+    def _label(self, key: str) -> str:
+        return next((item.label for item in self._catalog if item.key == key), key)
+
+    def _state(self, key: str) -> str:
+        """Etat d'une action en mots simples."""
+        options = self.config_entry.options
+        if key.startswith(TTS_KEY_PREFIX):
+            ready = options.get(OPT_TTS_PLAYER) and options.get(OPT_TTS_ENGINE)
+            return self._text("voice_ready" if ready else "voice_missing")
+        entity_id = linked_entity(options, key)
+        if entity_id is None:
+            return self._text("free")
+        return self._text("linked", entity=entity_id)
+
+    def _simple_screens(self) -> bool:
+        """Vrai si on montre la liste par noms (le site a envoye son catalogue)."""
+        return bool(self._catalog)
+
+    def _manual_visible(self) -> bool:
+        """Saisie a la main : mode avance, ou site sans catalogue (ancien site)."""
+        return self.show_advanced_options or not self._catalog
+
+    # --- menu ----------------------------------------------------------------
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> Any:
         """Menu."""
-        lines = _lines(self.config_entry.options)
-        menu = ["add_binding"]
-        if lines:
-            menu.append("remove_binding")
+        await self._load_catalog()
+        lines = binding_lines(self.config_entry.options)
+        menu = []
+        if self._catalog or lines:
+            menu.append("bindings")
+        if self._manual_visible():
+            menu.append("add_binding")
+            if lines:
+                menu.append("remove_binding")
         menu.append("tts")
-        summary = "\n".join(f"- {x[OPT_KEY]} -> {x[OPT_ENTITY]}" for x in lines) or "-"
         return self.async_show_menu(
             step_id="init",
             menu_options=menu,
-            description_placeholders={"bindings": summary},
+            description_placeholders={"site": self._site()},
         )
 
-    async def async_step_add_binding(self, user_input: dict[str, Any] | None = None) -> Any:
-        """Ajoute une ligne."""
+    # --- la liste des actions, par leur nom ----------------------------------------
+    async def async_step_bindings(self, user_input: dict[str, Any] | None = None) -> Any:
+        """Liste des actions avec leur etat ; on en choisit une pour la relier."""
+        if not self._catalog:
+            await self._load_catalog()
+        if user_input is not None:
+            key = user_input.get(OPT_ACTION)
+            if not key:
+                return self.async_create_entry(data=dict(self.config_entry.options))
+            if key.startswith(TTS_KEY_PREFIX):
+                return await self.async_step_tts()
+            self._key = key
+            return await self.async_step_link()
+        known = [item.key for item in self._catalog]
+        old = sorted(
+            line[OPT_KEY]
+            for line in binding_lines(self.config_entry.options)
+            if line[OPT_KEY] not in known
+        )
+        choices = [
+            SelectOptionDict(value=item.key, label=f"{item.label} : {self._state(item.key)}")
+            for item in self._catalog
+        ] + [
+            SelectOptionDict(value=key, label=f"{key} ({self._text('old')}) : {self._state(key)}")
+            for key in old
+        ]
+        schema = vol.Schema(
+            {
+                vol.Optional(OPT_ACTION): SelectSelector(
+                    SelectSelectorConfig(options=choices, mode=SelectSelectorMode.LIST)
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id="bindings",
+            data_schema=schema,
+            description_placeholders={"site": self._site()},
+        )
+
+    async def async_step_link(self, user_input: dict[str, Any] | None = None) -> Any:
+        """Choisit le script ou la scene d'une action (vide = ne plus la relier)."""
         errors: dict[str, str] = {}
-        lines = _lines(self.config_entry.options)
+        options = self.config_entry.options
+        if user_input is not None:
+            entity_id = user_input.get(OPT_ENTITY) or None
+            if entity_id is not None and not is_bindable(entity_id):
+                errors[OPT_ENTITY] = "invalid_target"
+            elif (
+                entity_id is not None
+                and linked_entity(options, self._key) is None
+                and len(binding_lines(options)) >= MAX_BINDINGS
+            ):
+                errors["base"] = "too_many"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, options=with_binding(options, self._key, entity_id)
+                )
+                return await self.async_step_bindings()
+        schema = vol.Schema(
+            {
+                vol.Optional(OPT_ENTITY): EntitySelector(
+                    EntitySelectorConfig(domain=list(BINDABLE_DOMAINS))
+                )
+            }
+        )
+        suggested = user_input or {OPT_ENTITY: linked_entity(options, self._key)}
+        return self.async_show_form(
+            step_id="link",
+            data_schema=self.add_suggested_values_to_schema(schema, suggested),
+            errors=errors,
+            description_placeholders={
+                "action": self._label(self._key),
+                "state": self._state(self._key),
+            },
+        )
+
+    # --- avance : a la main, comme avant --------------------------------------------
+    async def async_step_add_binding(self, user_input: dict[str, Any] | None = None) -> Any:
+        """Ajoute une ligne (mot d'action tape a la main)."""
+        errors: dict[str, str] = {}
+        lines = binding_lines(self.config_entry.options)
         if user_input is not None:
             key = str(user_input.get(OPT_KEY, "")).strip().lower()
             entity_id = str(user_input.get(OPT_ENTITY, ""))
@@ -202,7 +347,7 @@ class CuriosaOptionsFlow(OptionsFlow):
                 errors[OPT_KEY] = "reserved_key"
             elif any(line[OPT_KEY] == key for line in lines):
                 errors[OPT_KEY] = "duplicate_key"
-            elif entity_id.split(".", 1)[0] not in BINDABLE_DOMAINS:
+            elif not is_bindable(entity_id):
                 errors[OPT_ENTITY] = "invalid_target"
             elif len(lines) >= MAX_BINDINGS:
                 errors["base"] = "too_many"
@@ -227,7 +372,7 @@ class CuriosaOptionsFlow(OptionsFlow):
 
     async def async_step_remove_binding(self, user_input: dict[str, Any] | None = None) -> Any:
         """Supprime une ou plusieurs lignes."""
-        lines = _lines(self.config_entry.options)
+        lines = binding_lines(self.config_entry.options)
         if user_input is not None:
             gone = set(user_input.get(OPT_REMOVE, []))
             kept = [line for line in lines if line[OPT_KEY] not in gone]

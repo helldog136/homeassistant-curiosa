@@ -5,8 +5,9 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_URL, DOMAIN
 from .coordinator import CuriosaCoordinator
+from .sanitize import site_root
 
 
 class CuriosaEntity(CoordinatorEntity[CuriosaCoordinator]):
@@ -24,4 +25,6 @@ class CuriosaEntity(CoordinatorEntity[CuriosaCoordinator]):
             name="Curiosa",
             manufacturer="Helldog136",
             entry_type=DeviceEntryType.SERVICE,
+            # Bouton « Visiter » : ouvre le site de la personne.
+            configuration_url=site_root(coordinator.config_entry.data[CONF_URL]),
         )

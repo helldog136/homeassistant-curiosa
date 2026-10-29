@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .api import Action
+from .bindings import linked_entity
 from .const import (
-    BINDABLE_DOMAINS,
     CODE_ERROR,
     CODE_EXPIRED,
     CODE_OK,
@@ -21,9 +21,6 @@ from .const import (
     EXPIRY_TOLERANCE_SECONDS,
     KEY_RE,
     MAX_ACTION_LIFETIME_SECONDS,
-    OPT_BINDINGS,
-    OPT_ENTITY,
-    OPT_KEY,
     OPT_TTS_ENGINE,
     OPT_TTS_LANGUAGE,
     OPT_TTS_PLAYER,
@@ -78,12 +75,7 @@ def is_expired(action: Action, now: datetime) -> bool:
 
 def find_binding(options: Mapping[str, Any], key: str) -> str | None:
     """Entite liee a une cle, ou None."""
-    for line in options.get(OPT_BINDINGS, []):
-        if line.get(OPT_KEY) == key:
-            entity_id = line.get(OPT_ENTITY)
-            if isinstance(entity_id, str) and entity_id.split(".", 1)[0] in BINDABLE_DOMAINS:
-                return entity_id
-    return None
+    return linked_entity(options, key)
 
 
 async def execute_action(

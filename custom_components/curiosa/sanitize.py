@@ -164,3 +164,10 @@ def parse_site_address(raw: object, developer: bool = False) -> SiteAddress:
     if port:
         netloc = f"{netloc}:{port}"
     return SiteAddress(base_url=f"{parts.scheme}://{netloc}{api_path}", host=host)
+
+
+def site_root(base_url: str) -> str:
+    """Adresse du site (sans /m/<instance>), pour l'afficher et ouvrir le site."""
+    parts = urlsplit(base_url)
+    path = re.sub(r"/m/[^/]+/?$", "", parts.path).rstrip("/")
+    return f"{parts.scheme}://{parts.netloc}{path}"

@@ -7,35 +7,47 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .actions import Result, execute_action, is_expired, result_for
 from .api import (
     Action,
+    CatalogItem,
     CuriosaApi,
     CuriosaAuthError,
     CuriosaConnectionError,
     CuriosaError,
     CuriosaHttpError,
+    parse_catalog,
 )
+from .bindings import linked_entity
 from .const import (
     CODE_DISABLED,
     CODE_EXPIRED,
+    CODE_UNMAPPED,
     CONF_POLL_SECONDS,
     DEDUP_MAX,
     DEFAULT_POLL_SECONDS,
     DOMAIN,
     KEY_RE,
     MAX_BACKOFF_SECONDS,
+    MAX_ISSUES,
     MAX_RETRY_AFTER_SECONDS,
     MIN_POLL_SECONDS,
     OFF_POLL_SECONDS,
+    OPT_TTS_ENGINE,
+    OPT_TTS_PLAYER,
     PULL_LIMIT,
+    STORE_CATALOG,
+    STORE_ENABLED,
+    TTS_KEY_PREFIX,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,8 +93,9 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
         hass: HomeAssistant,
         entry: CuriosaConfigEntry,
         api: CuriosaApi,
-        store: Store[dict[str, bool]],
+        store: Store[dict[str, Any]],
         local_enabled: bool,
+        catalog: list[CatalogItem] | None = None,
     ) -> None:
         poll = entry.data.get(CONF_POLL_SECONDS, DEFAULT_POLL_SECONDS)
         self._poll = max(MIN_POLL_SECONDS, int(poll))
@@ -96,6 +109,9 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
         self.api = api
         self._store = store
         self.local_enabled = local_enabled
+        # Les actions que le site peut envoyer (nom lisible). Jamais renvoye au site.
+        self.catalog: list[CatalogItem] = list(catalog or [])
+        self._issue_keys: set[str] = set()
         self.last_action: LastAction | None = None
         self._cursor: int | None = None
         self._failures = 0
@@ -130,11 +146,66 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
     async def async_set_local_enabled(self, enabled: bool) -> None:
         """Interrupteur local : conserve sur disque, effet immediat."""
         self.local_enabled = enabled
-        await self._store.async_save({"enabled": enabled})
+        await self._save()
         self.set_interval()
         self.async_update_listeners()
         if enabled:
             await self.async_request_refresh()
+
+    async def _save(self) -> None:
+        data: dict[str, Any] = {STORE_ENABLED: self.local_enabled}
+        if self.catalog:  # pas de catalogue : le fichier reste comme en 0.1.0
+            data[STORE_CATALOG] = [{"key": i.key, "label": i.label} for i in self.catalog]
+        await self._store.async_save(data)
+
+    # --- catalogue des actions -------------------------------------------
+    def label_for(self, key: str) -> str:
+        """Nom lisible d'une action (a defaut, sa cle)."""
+        for item in self.catalog:
+            if item.key == key:
+                return item.label
+        return key
+
+    # --- reparations : « action recue sans script relie » ----------------
+    def _issue_id(self, key: str) -> str:
+        return f"{self.config_entry.entry_id}_unmapped_{key}"
+
+    def _is_linked(self, key: str) -> bool:
+        options = self.config_entry.options
+        if key.startswith(TTS_KEY_PREFIX):
+            return bool(options.get(OPT_TTS_PLAYER) and options.get(OPT_TTS_ENGINE))
+        return linked_entity(options, key) is not None
+
+    def _raise_issue(self, key: str) -> None:
+        """Une seule reparation par action, 20 au plus ; rien de la maison dedans."""
+        if key in self._issue_keys or len(self._issue_keys) >= MAX_ISSUES:
+            return
+        self._issue_keys.add(key)
+        voice = key.startswith(TTS_KEY_PREFIX)
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._issue_id(key),
+            is_fixable=not voice,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="unmapped_voice" if voice else "unmapped_action",
+            translation_placeholders={"action": self.label_for(key)},
+            data={"entry_id": self.config_entry.entry_id, "key": key},
+        )
+
+    @callback
+    def async_sync_issues(self) -> None:
+        """Retire les reparations dont l'action est maintenant reliee."""
+        for key in [k for k in self._issue_keys if self._is_linked(k)]:
+            self._issue_keys.discard(key)
+            ir.async_delete_issue(self.hass, DOMAIN, self._issue_id(key))
+
+    @callback
+    def async_clear_issues(self) -> None:
+        """Retire toutes les reparations de cette entree (dechargement)."""
+        for key in self._issue_keys:
+            ir.async_delete_issue(self.hass, DOMAIN, self._issue_id(key))
+        self._issue_keys.clear()
 
     # --- interrogation ----------------------------------------------------
     async def _async_update_data(self) -> CuriosaData:
@@ -163,11 +234,21 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
         if result.cursor is not None:
             self._cursor = result.cursor
 
+        await self._update_catalog(result.catalog)
+
         for action in result.actions[:PULL_LIMIT]:
             await self._handle(action)
 
         self.set_interval()
         return CuriosaData(result.enabled, result.live, self.last_action)
+
+    async def _update_catalog(self, catalog: list[CatalogItem] | None) -> None:
+        """Garde le catalogue du site (absent = ancien site = vide) ; ecrit seulement si change."""
+        new = list(catalog or [])
+        if new == self.catalog:
+            return
+        self.catalog = new
+        await self._save()
 
     async def _handle(self, action: Action) -> None:
         """Traite une action : doublon, coupe-circuit, expiration, execution, accuse."""
@@ -191,6 +272,8 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
             self._seen.popitem(last=False)
         key = action.key if KEY_RE.fullmatch(action.key) else "invalid"
         self.last_action = LastAction(key, outcome[0], outcome[1], action.test)
+        if outcome[1] == CODE_UNMAPPED and KEY_RE.fullmatch(action.key):
+            self._raise_issue(action.key)
         await self._ack(action.id, outcome)
 
     async def _ack(self, action_id: str, outcome: Result) -> None:
@@ -203,3 +286,11 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
         except CuriosaError as err:
             # Le site renverra l'action ; on renverra le meme accuse sans rien rejouer.
             _LOGGER.debug("Acknowledgement not delivered (%s)", type(err).__name__)
+
+
+async def async_stored_catalog(hass: HomeAssistant, entry_id: str) -> list[CatalogItem]:
+    """Catalogue garde sur disque (pour l'ecran de liaison si l'entree n'est pas chargee)."""
+    saved = await Store[dict[str, Any]](hass, 1, f"{DOMAIN}.{entry_id}").async_load()
+    if not isinstance(saved, dict):
+        return []
+    return parse_catalog(saved.get(STORE_CATALOG)) or []

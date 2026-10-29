@@ -47,16 +47,37 @@
     "step": {
       "init": {
         "title": "Curiosa settings",
-        "description": "Your links (action word -> scene or script):\n{bindings}",
+        "description": "Here you choose what each action starts at home.\nRewards are created on your site, in Twitch Bot > Rewards. Your site: {site}",
         "menu_options": {
-          "add_binding": "Add a link",
-          "remove_binding": "Remove a link",
+          "bindings": "Link my actions to a script",
+          "add_binding": "Advanced: add an action word by hand",
+          "remove_binding": "Advanced: remove a link",
           "tts": "Voice (read a message aloud)"
         }
       },
+      "bindings": {
+        "title": "Your actions",
+        "description": "Choose an action to link it to a script or a scene of your home. Example: \"Start the vacuum\" starts script.vacuum.\nRewards are created on your site, in Twitch Bot > Rewards. Your site: {site}\nTo read a message aloud, choose the voice action: it is set up in \"Voice\".\nWhen you are done, confirm without choosing anything.",
+        "data": {
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "The name comes from your site. Example: Start the vacuum, linked to script.vacuum"
+        }
+      },
+      "link": {
+        "title": "Link \"{action}\"",
+        "description": "Choose the script or scene that starts when \"{action}\" arrives. Leave empty to unlink it.\nToday: {state}",
+        "data": {
+          "entity_id": "Script or scene"
+        },
+        "data_description": {
+          "entity_id": "Example: script.vacuum"
+        }
+      },
       "add_binding": {
-        "title": "Add a link",
-        "description": "Choose the action word that Curiosa sends, and the scene or script it starts at home. Example: lights:red starts scene.red.",
+        "title": "Advanced: add an action word",
+        "description": "For an action your site has not listed yet. Type the action word sent by Curiosa, and choose the scene or script it starts at home. Example: lights:red starts scene.red.",
         "data": {
           "key": "Action word",
           "entity_id": "Scene or script"
@@ -66,7 +87,7 @@
         }
       },
       "remove_binding": {
-        "title": "Remove a link",
+        "title": "Advanced: remove a link",
         "data": {
           "remove": "Links to remove"
         }
@@ -91,7 +112,7 @@
       "invalid_key": "Use small letters, digits and : _ - only (40 characters max). Example: lights:red",
       "reserved_key": "Words starting with tts: are used for reading aloud. Choose another word.",
       "duplicate_key": "This action word already has a link. Remove it first.",
-      "invalid_target": "Choose a scene or a script.",
+      "invalid_target": "Choose a script or a scene from the list. Example: script.vacuum",
       "too_many": "Too many links.",
       "engine_required": "Choose a voice service too.",
       "invalid_language": "This language does not look right. Example: fr-FR"
@@ -139,6 +160,37 @@
     },
     "bad_address": {
       "message": "The saved address is not safe (https is required)."
+    }
+  },
+  "issues": {
+    "unmapped_action": {
+      "title": "A reward asks for \"{action}\" but no script is linked",
+      "description": "Your site asked for \"{action}\", but nothing is linked to this action at home: nothing happened. Press \"Fix\" to choose a script or a scene. You can also go to Settings > Devices & services > Curiosa > Configure.",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Link \"{action}\"",
+            "description": "Choose the script or scene that starts when \"{action}\" arrives. Example: script.vacuum",
+            "data": {
+              "entity_id": "Script or scene"
+            },
+            "data_description": {
+              "entity_id": "Example: script.vacuum"
+            }
+          }
+        },
+        "error": {
+          "invalid_target": "Choose a script or a scene from the list. Example: script.vacuum",
+          "too_many": "Too many links."
+        },
+        "abort": {
+          "not_ready": "Curiosa does not answer right now. Try again in a moment."
+        }
+      }
+    },
+    "unmapped_voice": {
+      "title": "A reward asks to read a message, but the voice is not set up",
+      "description": "Your site asked to read a message aloud, but no speaker is chosen at home: nothing was read. Go to Settings > Devices & services > Curiosa > Configure > Voice, then choose a speaker and a voice service."
     }
   }
 }

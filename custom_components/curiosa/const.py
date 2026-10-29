@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 DOMAIN = "curiosa"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 # Donnees de l'entree de configuration
 CONF_URL = "url"
@@ -27,6 +27,7 @@ OPT_TTS_SAY_VIEWER = "tts_say_viewer"
 OPT_REMOVE = "remove"
 
 BINDABLE_DOMAINS = ("scene", "script")
+OPT_ACTION = "action"
 TTS_KEY_PREFIX = "tts:"
 MAX_BINDINGS = 100
 
@@ -34,6 +35,13 @@ MAX_BINDINGS = 100
 KEY_RE = re.compile(r"^[a-z0-9][a-z0-9:_-]{0,39}$")
 CODE_RE = re.compile(r"^[A-Z0-9]{8}$")
 ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,100}$")
+
+# Catalogue des actions (liste que le site peut envoyer, avec leur nom lisible)
+CATALOG_MAX_ITEMS = 50
+CATALOG_LABEL_MAX_LENGTH = 60
+STORE_ENABLED = "enabled"
+STORE_CATALOG = "catalog"
+MAX_ISSUES = 20  # reparations ouvertes en meme temps (une par action)
 
 # Nom envoye a l'appairage : fixe, jamais le nom de la maison
 DEVICE_NAME = "Home Assistant"
