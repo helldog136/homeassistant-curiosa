@@ -9,7 +9,7 @@ from typing import Any
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-PREFIX = "/m/home-assistant/ha"
+PREFIX = "/m/home-assistant"
 GOOD_CODE = "ABCD2345"
 EXPIRED_CODE = "OLDOLD22"
 LIMITED_CODE = "SPAMSPAM"

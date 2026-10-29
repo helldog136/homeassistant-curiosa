@@ -72,7 +72,7 @@ async def test_site_unreachable(hass, fake) -> None:
 
 
 async def test_module_missing_is_reported_on_address(hass, fake) -> None:
-    result = await submit(hass, (await start(hass))["flow_id"], f"{fake.url}/m/autre/ha", GOOD_CODE)
+    result = await submit(hass, (await start(hass))["flow_id"], f"{fake.url}/m/autre", GOOD_CODE)
     assert result["errors"] == {CONF_URL: "not_found"}
 
 

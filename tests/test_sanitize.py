@@ -70,14 +70,14 @@ def test_normalize_code() -> None:
 
 def test_address_https_ok() -> None:
     addr = parse_site_address("https://mon-site.com")
-    assert addr.base_url == "https://mon-site.com/m/home-assistant/ha"
+    assert addr.base_url == "https://mon-site.com/m/home-assistant"
     assert addr.host == "mon-site.com"
     assert parse_site_address("mon-site.com/").base_url.startswith("https://mon-site.com/m/")
 
 
 def test_address_keeps_explicit_path() -> None:
-    addr = parse_site_address("https://mon-site.com/m/ha-maison/ha/")
-    assert addr.base_url == "https://mon-site.com/m/ha-maison/ha"
+    addr = parse_site_address("https://mon-site.com/m/ha-maison/")
+    assert addr.base_url == "https://mon-site.com/m/ha-maison"
 
 
 @pytest.mark.parametrize(
@@ -105,9 +105,14 @@ def test_address_refused(raw: str, code: str) -> None:
 
 def test_address_developer_mode() -> None:
     addr = parse_site_address("http://127.0.0.1:8080", developer=True)
-    assert addr.base_url == "http://127.0.0.1:8080/m/home-assistant/ha"
+    assert addr.base_url == "http://127.0.0.1:8080/m/home-assistant"
     assert parse_site_address("https://localhost", developer=True).host == "localhost"
     # http reste refuse pour un site public, meme en mode developpeur
     with pytest.raises(AddressError) as err:
         parse_site_address("http://mon-site.com", developer=True)
     assert err.value.code == "https_required"
+
+
+def test_ancienne_forme_avec_ha_final_est_acceptee():
+    addr = parse_site_address("https://mon-site.com/m/ha-maison/ha")
+    assert addr.base_url == "https://mon-site.com/m/ha-maison"

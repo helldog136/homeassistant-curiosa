@@ -127,7 +127,8 @@ def parse_site_address(raw: object, developer: bool = False) -> SiteAddress:
 
     - sans schema : https:// est ajoute ;
     - http:// et les adresses locales ne passent qu'en mode developpeur ;
-    - si l'adresse ne contient pas /m/<instance>/ha, on ajoute l'adresse par defaut.
+    - si l'adresse ne contient pas /m/<instance>, on ajoute l'adresse par defaut
+      (un /ha final, ancienne forme, est retire).
     """
     if not isinstance(raw, str) or not raw.strip():
         raise AddressError("invalid_address")
@@ -152,9 +153,11 @@ def parse_site_address(raw: object, developer: bool = False) -> SiteAddress:
 
     path = parts.path.rstrip("/")
     if re.fullmatch(r"(?:/[A-Za-z0-9._~-]+)*/m/[A-Za-z0-9._-]+/ha", path):
+        path = path[: -len("/ha")]
+    if re.fullmatch(r"(?:/[A-Za-z0-9._~-]+)*/m/[A-Za-z0-9._-]+", path):
         api_path = path
     elif re.fullmatch(r"(?:/[A-Za-z0-9._~-]+)*", path):
-        api_path = f"{path}/m/{DEFAULT_INSTANCE}/ha"
+        api_path = f"{path}/m/{DEFAULT_INSTANCE}"
     else:
         raise AddressError("invalid_address")
     netloc = f"[{host}]" if ":" in host else host
