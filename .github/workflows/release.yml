@@ -1,0 +1,33 @@
+name: Release
+
+# Publie une version (etiquette + archive curiosa.zip pour HACS) quand la version
+# du manifest n'a pas encore d'etiquette. Rien a faire a la main.
+on:
+  push:
+    branches: [main]
+    paths:
+      - custom_components/curiosa/manifest.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lire la version
+        id: v
+        run: echo "version=$(python3 -c "import json;print(json.load(open('custom_components/curiosa/manifest.json'))['version'])")" >> "$GITHUB_OUTPUT"
+      - name: Publier si la version est nouvelle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "v${VERSION} existe deja : rien a faire."
+            exit 0
+          fi
+          (cd custom_components/curiosa && zip -qr ../../curiosa.zip .)
+          gh release create "v${VERSION}" curiosa.zip --target "${GITHUB_SHA}" --title "Curiosa pour Home Assistant ${VERSION}" --generate-notes
