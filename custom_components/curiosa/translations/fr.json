@@ -47,16 +47,37 @@
     "step": {
       "init": {
         "title": "Réglages de Curiosa",
-        "description": "Tes liaisons (mot d'action -> scène ou script) :\n{bindings}",
+        "description": "Ici, tu choisis ce que chaque action lance chez toi.\nLes récompenses se créent sur ton site, dans le Bot Twitch > Récompenses. Ton site : {site}",
         "menu_options": {
-          "add_binding": "Ajouter une liaison",
-          "remove_binding": "Supprimer une liaison",
+          "bindings": "Relier mes actions à un script",
+          "add_binding": "Avancé : ajouter un mot d'action à la main",
+          "remove_binding": "Avancé : supprimer une liaison",
           "tts": "Voix (lire un message à voix haute)"
         }
       },
+      "bindings": {
+        "title": "Tes actions",
+        "description": "Choisis une action pour la relier à un script ou à une scène de ta maison. Exemple : « Lancer l'aspirateur » lance script.aspirateur.\nLes récompenses se créent sur ton site, dans le Bot Twitch > Récompenses. Ton site : {site}\nPour lire un message à voix haute, choisis l'action de voix : elle se règle dans « Voix ».\nQuand tu as fini, valide sans rien choisir.",
+        "data": {
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "Le nom vient de ton site. Exemple : Lancer l'aspirateur, reliée à script.aspirateur"
+        }
+      },
+      "link": {
+        "title": "Relier « {action} »",
+        "description": "Choisis le script ou la scène qui se lance quand « {action} » arrive. Laisse vide pour ne plus la relier.\nAujourd'hui : {state}",
+        "data": {
+          "entity_id": "Script ou scène"
+        },
+        "data_description": {
+          "entity_id": "Exemple : script.aspirateur"
+        }
+      },
       "add_binding": {
-        "title": "Ajouter une liaison",
-        "description": "Choisis le mot d'action envoyé par Curiosa, et la scène ou le script qu'il lance chez toi. Exemple : lumieres:rouge lance scene.rouge.",
+        "title": "Avancé : ajouter un mot d'action",
+        "description": "Pour une action que ton site n'a pas encore listée. Écris le mot d'action envoyé par Curiosa, et choisis la scène ou le script qu'il lance chez toi. Exemple : lumieres:rouge lance scene.rouge.",
         "data": {
           "key": "Mot d'action",
           "entity_id": "Scène ou script"
@@ -66,7 +87,7 @@
         }
       },
       "remove_binding": {
-        "title": "Supprimer une liaison",
+        "title": "Avancé : supprimer une liaison",
         "data": {
           "remove": "Liaisons à supprimer"
         }
@@ -91,7 +112,7 @@
       "invalid_key": "Utilise seulement des petites lettres, des chiffres et : _ - (40 caractères max). Exemple : lumieres:rouge",
       "reserved_key": "Les mots qui commencent par tts: servent à la lecture à voix haute. Choisis un autre mot.",
       "duplicate_key": "Ce mot d'action a déjà une liaison. Supprime-la d'abord.",
-      "invalid_target": "Choisis une scène ou un script.",
+      "invalid_target": "Choisis un script ou une scène dans la liste. Exemple : script.aspirateur",
       "too_many": "Trop de liaisons.",
       "engine_required": "Choisis aussi un service de voix.",
       "invalid_language": "Cette langue ne semble pas correcte. Exemple : fr-FR"
@@ -139,6 +160,36 @@
     },
     "bad_address": {
       "message": "L'adresse enregistrée n'est pas sûre (https est obligatoire)."
+    }
+  },
+  "issues": {
+    "unmapped_action": {
+      "title": "Une récompense demande « {action} » mais aucun script n'est relié",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Relier « {action} »",
+            "description": "Choisis le script ou la scène qui se lance quand « {action} » arrive. Exemple : script.aspirateur Tu peux aussi relier tes actions dans Paramètres > Appareils et services > Curiosa > Configurer.",
+            "data": {
+              "entity_id": "Script ou scène"
+            },
+            "data_description": {
+              "entity_id": "Exemple : script.aspirateur"
+            }
+          }
+        },
+        "error": {
+          "invalid_target": "Choisis un script ou une scène dans la liste. Exemple : script.aspirateur",
+          "too_many": "Trop de liaisons."
+        },
+        "abort": {
+          "not_ready": "Curiosa ne répond pas pour le moment. Réessaie dans un instant."
+        }
+      }
+    },
+    "unmapped_voice": {
+      "title": "Une récompense demande de lire un message, mais la voix n'est pas réglée",
+      "description": "Ton site a demandé de lire un message à voix haute, mais aucun haut-parleur n'est choisi chez toi : rien n'a été lu. Va dans Paramètres > Appareils et services > Curiosa > Configurer > Voix, puis choisis un haut-parleur et un service de voix."
     }
   }
 }

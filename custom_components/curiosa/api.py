@@ -14,6 +14,8 @@ from typing import Any
 import aiohttp
 
 from .const import (
+    CATALOG_LABEL_MAX_LENGTH,
+    CATALOG_MAX_ITEMS,
     CODE_RE,
     DEFAULT_POLL_SECONDS,
     ID_RE,
@@ -24,6 +26,7 @@ from .const import (
     REQUEST_TIMEOUT,
     VERSION,
 )
+from .sanitize import clean_text, normalize_key
 
 
 class CuriosaError(Exception):
@@ -78,6 +81,14 @@ class Action:
 
 
 @dataclass(frozen=True)
+class CatalogItem:
+    """Une action que le site peut envoyer : sa cle et son nom lisible."""
+
+    key: str
+    label: str
+
+
+@dataclass(frozen=True)
 class PullResult:
     """Reponse de l'interrogation."""
 
@@ -86,6 +97,34 @@ class PullResult:
     server_time: datetime | None
     cursor: int | None
     actions: list[Action] = field(default_factory=list)
+    # None = le site n'a pas envoye de catalogue (ancien site) ; [] = catalogue vide
+    catalog: list[CatalogItem] | None = None
+
+
+def parse_catalog(raw: object) -> list[CatalogItem] | None:
+    """Valide le catalogue : None si absent ou de mauvaise forme, sinon la liste propre.
+
+    Strict : chaque element doit etre un objet avec une cle valide (meme regle que
+    les actions, en minuscules exactes) et un libelle texte, re-nettoye ici et coupe a
+    60 caracteres. Les elements invalides et les doublons sont ignores ; 50 au plus.
+    """
+    if not isinstance(raw, list):
+        return None
+    items: list[CatalogItem] = []
+    seen: set[str] = set()
+    for entry in raw[:CATALOG_MAX_ITEMS]:
+        if not isinstance(entry, dict):
+            continue
+        raw_key = entry.get("key")
+        label = entry.get("label")
+        if not isinstance(raw_key, str) or not isinstance(label, str):
+            continue
+        key = normalize_key(raw_key)
+        if key is None or key != raw_key or key in seen:
+            continue
+        seen.add(key)
+        items.append(CatalogItem(key, clean_text(label, CATALOG_LABEL_MAX_LENGTH) or key))
+    return items
 
 
 def parse_time(value: object) -> datetime | None:
@@ -142,6 +181,7 @@ def parse_pull(payload: dict[str, Any]) -> PullResult:
         server_time=parse_time(payload.get("serverTime")),
         cursor=cursor if isinstance(cursor, int) and not isinstance(cursor, bool) else None,
         actions=actions,
+        catalog=parse_catalog(payload.get("catalog")),
     )
 
 

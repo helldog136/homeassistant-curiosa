@@ -60,3 +60,62 @@ def test_no_jargon_for_the_user() -> None:
     )
     for word in ("webhook", "eventsub", "token", "jeton", "oauth", "payload", "api "):
         assert word not in text, word
+
+
+def test_every_options_step_and_menu_entry_is_translated() -> None:
+    source = (ROOT / "config_flow.py").read_text(encoding="utf-8")
+    steps = set(
+        re.findall(r"async def async_step_(\w+)", source.split("class CuriosaOptionsFlow")[1])
+    )
+    for lang in ("en", "fr"):
+        options = load(f"translations/{lang}.json")["options"]["step"]
+        assert steps <= set(options), (lang, steps - set(options))
+        menu = set(options["init"]["menu_options"])
+        assert {"bindings", "add_binding", "remove_binding", "tts"} == menu
+
+
+def test_issues_are_translated_like_the_code_uses_them() -> None:
+    source = (ROOT / "coordinator.py").read_text(encoding="utf-8")
+    keys = set(re.findall(r'"(unmapped_\w+)"', source))
+    assert keys == {"unmapped_action", "unmapped_voice"}
+    for lang in ("en", "fr"):
+        issues = load(f"translations/{lang}.json")["issues"]
+        assert keys <= set(issues)
+        for key in keys:
+            assert issues[key]["title"].strip()
+        fix = issues["unmapped_action"]["fix_flow"]
+        assert "init" in fix["step"] and {"invalid_target", "too_many"} <= set(fix["error"])
+        assert "not_ready" in fix["abort"]
+
+
+def test_flow_placeholders_are_provided() -> None:
+    """Chaque {nom} des ecrans de liaison est fourni par le code (sinon texte brut)."""
+    source = (ROOT / "config_flow.py").read_text(encoding="utf-8") + (
+        ROOT / "repairs.py"
+    ).read_text(encoding="utf-8")
+    provided = {"site", "action", "state"}
+    for name in provided:
+        assert f'"{name}"' in source
+    for lang in ("en", "fr"):
+        data = load(f"translations/{lang}.json")
+        text = json.dumps([data["options"]["step"], data["issues"]])
+        assert set(re.findall(r"{(\w+)}", text)) <= provided | {"example"}
+
+
+def test_texts_for_emma_use_plain_words() -> None:
+    """Pas de jargon sur les nouveaux ecrans (le mot « entite » reste cote developpeur)."""
+    for lang, banned in (("fr", ("entité", "binding", "slug", "clé")), ("en", ("entity", "slug"))):
+        data = load(f"translations/{lang}.json")
+        values = [v for _, v in paths({"s": data["options"]["step"], "i": data["issues"]})]
+        text = " ".join(values).lower()
+        for word in banned:
+            assert word not in text, (lang, word)
+
+
+def test_fixable_issue_has_no_plain_description() -> None:
+    """Regle de hassfest : un probleme corrigeable a un fix_flow, pas de description."""
+    for lang in ("en", "fr"):
+        issues = load(f"translations/{lang}.json")["issues"]
+        assert "description" not in issues["unmapped_action"]
+        assert "fix_flow" not in issues["unmapped_voice"]
+        assert issues["unmapped_voice"]["description"].strip()
