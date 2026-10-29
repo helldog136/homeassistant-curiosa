@@ -1,0 +1,144 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Curiosa",
+        "description": "In your Curiosa admin, press \"Link Home Assistant\". Copy the site address and the 8-character code shown there.",
+        "data": {
+          "url": "Site address",
+          "code": "Code",
+          "developer_mode": "Test mode (my own network)"
+        },
+        "data_description": {
+          "url": "Example: {example}",
+          "code": "Example: ABCD2345. A code works for 10 minutes.",
+          "developer_mode": "Leave off, unless you are testing at home. Allows an address on your own network."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Link again",
+        "description": "Curiosa no longer accepts this link ({host}). In your Curiosa admin, ask for a new code, then type it here.",
+        "data": {
+          "code": "New code"
+        },
+        "data_description": {
+          "code": "Example: ABCD2345"
+        }
+      }
+    },
+    "error": {
+      "invalid_address": "This address does not look right. Example: {example}",
+      "https_required": "The address must start with https://",
+      "private_address": "This is an address on your own network. Use your public site address, or turn on test mode.",
+      "invalid_code_format": "The code has 8 letters and digits. Example: ABCD2345",
+      "invalid_code": "This code is not right. Check it, or ask for a new one in Curiosa.",
+      "code_expired": "This code is too old. Ask for a new one in Curiosa (it works for 10 minutes).",
+      "too_many": "Too many tries. Wait a few minutes, then ask for a new code.",
+      "not_found": "Curiosa did not answer at this address. Is the Home Assistant module turned on in your site?",
+      "cannot_connect": "The site does not answer. Check the address and your internet.",
+      "unknown": "Something went wrong. Try again in a moment."
+    },
+    "abort": {
+      "already_configured": "This site is already linked.",
+      "reauth_successful": "The link works again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Curiosa settings",
+        "description": "Your links (action word -> scene or script):\n{bindings}",
+        "menu_options": {
+          "add_binding": "Add a link",
+          "remove_binding": "Remove a link",
+          "tts": "Voice (read a message aloud)"
+        }
+      },
+      "add_binding": {
+        "title": "Add a link",
+        "description": "Choose the action word that Curiosa sends, and the scene or script it starts at home. Example: lights:red starts scene.red.",
+        "data": {
+          "key": "Action word",
+          "entity_id": "Scene or script"
+        },
+        "data_description": {
+          "key": "Small letters, digits and : _ - only. Example: lights:red"
+        }
+      },
+      "remove_binding": {
+        "title": "Remove a link",
+        "data": {
+          "remove": "Links to remove"
+        }
+      },
+      "tts": {
+        "title": "Voice",
+        "description": "Choose where messages are read aloud. Leave the speaker empty to turn reading off. Only this speaker is used.",
+        "data": {
+          "tts_player": "Speaker",
+          "tts_engine": "Voice service",
+          "tts_language": "Language",
+          "tts_volume": "Volume",
+          "tts_say_viewer": "Say the viewer's name first"
+        },
+        "data_description": {
+          "tts_language": "Optional. Example: fr-FR. Empty = the voice's own language.",
+          "tts_volume": "Optional. Empty = keep the speaker's volume. The volume stays changed after the message."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "Use small letters, digits and : _ - only (40 characters max). Example: lights:red",
+      "reserved_key": "Words starting with tts: are used for reading aloud. Choose another word.",
+      "duplicate_key": "This action word already has a link. Remove it first.",
+      "invalid_target": "Choose a scene or a script.",
+      "too_many": "Too many links.",
+      "engine_required": "Choose a voice service too.",
+      "invalid_language": "This language does not look right. Example: fr-FR"
+    }
+  },
+  "entity": {
+    "switch": {
+      "enabled": {
+        "name": "active"
+      }
+    },
+    "sensor": {
+      "connection": {
+        "name": "connection",
+        "state": {
+          "ready": "Ready",
+          "waiting_stream": "Waiting for the stream",
+          "paused_site": "Paused on the site",
+          "paused_here": "Paused here",
+          "problem": "Connection problem"
+        }
+      },
+      "last_action": {
+        "name": "last action"
+      }
+    },
+    "binary_sensor": {
+      "connected": {
+        "name": "connected"
+      },
+      "live": {
+        "name": "stream live"
+      }
+    }
+  },
+  "exceptions": {
+    "reauth_needed": {
+      "message": "Curiosa no longer accepts this link. Link it again."
+    },
+    "site_error": {
+      "message": "The site answered with an error ({status}). New try soon."
+    },
+    "cannot_reach": {
+      "message": "The site does not answer. New try soon."
+    },
+    "bad_address": {
+      "message": "The saved address is not safe (https is required)."
+    }
+  }
+}

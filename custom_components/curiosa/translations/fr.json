@@ -1,0 +1,144 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connecter Curiosa",
+        "description": "Dans l'admin de Curiosa, appuie sur « Associer Home Assistant ». Copie l'adresse du site et le code de 8 caractères affichés.",
+        "data": {
+          "url": "Adresse du site",
+          "code": "Code",
+          "developer_mode": "Mode test (mon propre réseau)"
+        },
+        "data_description": {
+          "url": "Exemple : {example}",
+          "code": "Exemple : ABCD2345. Un code marche 10 minutes.",
+          "developer_mode": "Laisse coupé, sauf si tu testes à la maison. Autorise une adresse de ton propre réseau."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Associer de nouveau",
+        "description": "Curiosa n'accepte plus cette association ({host}). Dans l'admin de Curiosa, demande un nouveau code, puis tape-le ici.",
+        "data": {
+          "code": "Nouveau code"
+        },
+        "data_description": {
+          "code": "Exemple : ABCD2345"
+        }
+      }
+    },
+    "error": {
+      "invalid_address": "Cette adresse ne semble pas correcte. Exemple : {example}",
+      "https_required": "L'adresse doit commencer par https://",
+      "private_address": "C'est une adresse de ton propre réseau. Utilise l'adresse publique du site, ou active le mode test.",
+      "invalid_code_format": "Le code contient 8 lettres et chiffres. Exemple : ABCD2345",
+      "invalid_code": "Ce code n'est pas bon. Vérifie-le, ou demande-en un nouveau dans Curiosa.",
+      "code_expired": "Ce code est trop ancien. Demande-en un nouveau dans Curiosa (il marche 10 minutes).",
+      "too_many": "Trop d'essais. Attends quelques minutes, puis demande un nouveau code.",
+      "not_found": "Curiosa ne répond pas à cette adresse. Le module Home Assistant est-il activé sur ton site ?",
+      "cannot_connect": "Le site ne répond pas. Vérifie l'adresse et ta connexion internet.",
+      "unknown": "Un problème est survenu. Réessaie dans un instant."
+    },
+    "abort": {
+      "already_configured": "Ce site est déjà associé.",
+      "reauth_successful": "L'association fonctionne de nouveau."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Réglages de Curiosa",
+        "description": "Tes liaisons (mot d'action -> scène ou script) :\n{bindings}",
+        "menu_options": {
+          "add_binding": "Ajouter une liaison",
+          "remove_binding": "Supprimer une liaison",
+          "tts": "Voix (lire un message à voix haute)"
+        }
+      },
+      "add_binding": {
+        "title": "Ajouter une liaison",
+        "description": "Choisis le mot d'action envoyé par Curiosa, et la scène ou le script qu'il lance chez toi. Exemple : lumieres:rouge lance scene.rouge.",
+        "data": {
+          "key": "Mot d'action",
+          "entity_id": "Scène ou script"
+        },
+        "data_description": {
+          "key": "Petites lettres, chiffres et : _ - seulement. Exemple : lumieres:rouge"
+        }
+      },
+      "remove_binding": {
+        "title": "Supprimer une liaison",
+        "data": {
+          "remove": "Liaisons à supprimer"
+        }
+      },
+      "tts": {
+        "title": "Voix",
+        "description": "Choisis où les messages sont lus à voix haute. Laisse le haut-parleur vide pour couper la lecture. Seul ce haut-parleur est utilisé.",
+        "data": {
+          "tts_player": "Haut-parleur",
+          "tts_engine": "Service de voix",
+          "tts_language": "Langue",
+          "tts_volume": "Volume",
+          "tts_say_viewer": "Dire d'abord le pseudo du viewer"
+        },
+        "data_description": {
+          "tts_language": "Facultatif. Exemple : fr-FR. Vide = la langue propre à la voix.",
+          "tts_volume": "Facultatif. Vide = on garde le volume du haut-parleur. Le volume reste modifié après le message."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "Utilise seulement des petites lettres, des chiffres et : _ - (40 caractères max). Exemple : lumieres:rouge",
+      "reserved_key": "Les mots qui commencent par tts: servent à la lecture à voix haute. Choisis un autre mot.",
+      "duplicate_key": "Ce mot d'action a déjà une liaison. Supprime-la d'abord.",
+      "invalid_target": "Choisis une scène ou un script.",
+      "too_many": "Trop de liaisons.",
+      "engine_required": "Choisis aussi un service de voix.",
+      "invalid_language": "Cette langue ne semble pas correcte. Exemple : fr-FR"
+    }
+  },
+  "entity": {
+    "switch": {
+      "enabled": {
+        "name": "actif"
+      }
+    },
+    "sensor": {
+      "connection": {
+        "name": "connexion",
+        "state": {
+          "ready": "Prêt",
+          "waiting_stream": "En attente du stream",
+          "paused_site": "En pause sur le site",
+          "paused_here": "En pause ici",
+          "problem": "Problème de connexion"
+        }
+      },
+      "last_action": {
+        "name": "dernière action"
+      }
+    },
+    "binary_sensor": {
+      "connected": {
+        "name": "connecté"
+      },
+      "live": {
+        "name": "stream en direct"
+      }
+    }
+  },
+  "exceptions": {
+    "reauth_needed": {
+      "message": "Curiosa n'accepte plus cette association. Associe-la de nouveau."
+    },
+    "site_error": {
+      "message": "Le site a répondu par une erreur ({status}). Nouvel essai bientôt."
+    },
+    "cannot_reach": {
+      "message": "Le site ne répond pas. Nouvel essai bientôt."
+    },
+    "bad_address": {
+      "message": "L'adresse enregistrée n'est pas sûre (https est obligatoire)."
+    }
+  }
+}
