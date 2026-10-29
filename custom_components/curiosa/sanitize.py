@@ -171,3 +171,8 @@ def site_root(base_url: str) -> str:
     parts = urlsplit(base_url)
     path = re.sub(r"/m/[^/]+/?$", "", parts.path).rstrip("/")
     return f"{parts.scheme}://{parts.netloc}{path}"
+
+
+def connector_page_url(base_url: str) -> str:
+    """Page du Connecteur Home Assistant dans l'administration du site (adresse stable)."""
+    return f"{site_root(base_url)}/admin/modules/home-assistant"

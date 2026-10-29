@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_URL, DOMAIN
 from .coordinator import CuriosaCoordinator
-from .sanitize import site_root
+from .sanitize import connector_page_url
 
 
 class CuriosaEntity(CoordinatorEntity[CuriosaCoordinator]):
@@ -26,5 +26,5 @@ class CuriosaEntity(CoordinatorEntity[CuriosaCoordinator]):
             manufacturer="Helldog136",
             entry_type=DeviceEntryType.SERVICE,
             # Bouton « Visiter » : ouvre le site de la personne.
-            configuration_url=site_root(coordinator.config_entry.data[CONF_URL]),
+            configuration_url=connector_page_url(coordinator.config_entry.data[CONF_URL]),
         )

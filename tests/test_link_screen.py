@@ -249,11 +249,13 @@ async def test_migration_from_0_1_0_storage(
 # --- bouton « Visiter » ---------------------------------------------------------------
 
 
-async def test_device_has_visit_link_to_the_site(hass, fake, service_calls, entry_factory) -> None:
+async def test_device_has_visit_link_to_the_connector_page(
+    hass, fake, service_calls, entry_factory
+) -> None:
     entry = await entry_factory(fake)
     device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
     assert device is not None
-    assert device.configuration_url == fake.url
+    assert device.configuration_url == f"{fake.url}/admin/modules/home-assistant"
 
 
 def test_site_root_strips_instance() -> None:
@@ -273,3 +275,16 @@ def test_no_url_in_translations() -> None:
         # Nouveaux ecrans : le site s'affiche par un champ de texte, jamais ecrit en dur.
         text = json.dumps([data["options"]["step"], data["issues"]])
         assert "http://" not in text and "https://" not in text, name
+
+
+def test_connector_page_url_points_to_module_page() -> None:
+    from custom_components.curiosa.sanitize import connector_page_url
+
+    assert (
+        connector_page_url("https://mon-site.com/m/home-assistant")
+        == "https://mon-site.com/admin/modules/home-assistant"
+    )
+    assert (
+        connector_page_url("https://mon-site.com/sous/dossier/m/ha1")
+        == "https://mon-site.com/sous/dossier/admin/modules/home-assistant"
+    )
