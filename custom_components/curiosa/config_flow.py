@@ -117,7 +117,14 @@ class CuriosaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
+            description_placeholders={"example": self._example_address()},
         )
+
+    def _example_address(self) -> str:
+        """Exemple d'adresse dans la langue de l'utilisateur (pas d'URL dans les textes)."""
+        if str(self.hass.config.language).startswith("fr"):
+            return "https://mon-site.com"
+        return "https://my-site.com"
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
         """Le site a refuse le jeton (401) : il faut un nouveau code."""

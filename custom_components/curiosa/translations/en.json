@@ -10,7 +10,7 @@
           "developer_mode": "Test mode (my own network)"
         },
         "data_description": {
-          "url": "Example: https://my-site.com",
+          "url": "Example: {example}",
           "code": "Example: ABCD2345. A code works for 10 minutes.",
           "developer_mode": "Leave off, unless you are testing at home. Allows an address on your own network."
         }
@@ -27,7 +27,7 @@
       }
     },
     "error": {
-      "invalid_address": "This address does not look right. Example: https://my-site.com",
+      "invalid_address": "This address does not look right. Example: {example}",
       "https_required": "The address must start with https://",
       "private_address": "This is an address on your own network. Use your public site address, or turn on test mode.",
       "invalid_code_format": "The code has 8 letters and digits. Example: ABCD2345",

@@ -10,7 +10,7 @@
           "developer_mode": "Mode test (mon propre réseau)"
         },
         "data_description": {
-          "url": "Exemple : https://mon-site.com",
+          "url": "Exemple : {example}",
           "code": "Exemple : ABCD2345. Un code marche 10 minutes.",
           "developer_mode": "Laisse coupé, sauf si tu testes à la maison. Autorise une adresse de ton propre réseau."
         }
@@ -27,7 +27,7 @@
       }
     },
     "error": {
-      "invalid_address": "Cette adresse ne semble pas correcte. Exemple : https://mon-site.com",
+      "invalid_address": "Cette adresse ne semble pas correcte. Exemple : {example}",
       "https_required": "L'adresse doit commencer par https://",
       "private_address": "C'est une adresse de ton propre réseau. Utilise l'adresse publique du site, ou active le mode test.",
       "invalid_code_format": "Le code contient 8 lettres et chiffres. Exemple : ABCD2345",

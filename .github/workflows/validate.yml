@@ -26,6 +26,8 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # Depot en licence Curiosa (pas une licence reconnue par GitHub) ; les themes se posent dans les reglages du depot.
+          ignore: license topics
 
   tests:
     name: Ruff and pytest
