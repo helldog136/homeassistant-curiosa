@@ -116,3 +116,31 @@ async def test_entities_never_hold_viewer_or_text(hass, fake, service_calls, ent
     assert KEY_RE.fullmatch(last.state)
     assert last.state == "fete"
     assert set(last.attributes) - {"friendly_name", "icon"} == {"status", "code"}
+
+
+async def test_info_is_read_only_and_never_sent(
+    hass, hass_client, fake, service_calls, entry_factory, hass_storage
+) -> None:
+    """Les informations des modules sont lues, jamais renvoyees ni gardees sur disque."""
+    fake.info = [
+        {"key": "sponsor-ticker.sponsors", "label": "Sponsor", "value": "Camille Shop"},
+        {"key": "stats.viewers", "label": "Viewers", "value": 42, "unit": "viewers"},
+    ]
+    entry = await entry_factory(fake)
+    await run_scenario(hass, fake, entry)
+    assert entry.runtime_data.data is not None
+    assert len(fake.requests) >= 6
+    for request in fake.requests:
+        assert set(request["query"]) <= {"cursor", "limit"}
+        if request["path"].endswith("/ack"):
+            assert set(request["body"]) == {"id", "status", "code"}
+        else:
+            assert request["body"] is None
+        blob = json.dumps(request, ensure_ascii=False).lower()
+        for forbidden in ("camille", "sponsor", "viewers", "stats.", '"info"'):
+            assert forbidden not in blob, forbidden
+    stored = hass_storage[f"curiosa.{entry.entry_id}"]["data"]
+    assert set(stored) == {"enabled"}
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    assert diag["info_count"] == 2
+    assert "Camille" not in json.dumps(diag)

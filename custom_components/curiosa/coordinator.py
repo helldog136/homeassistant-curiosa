@@ -25,6 +25,7 @@ from .api import (
     CuriosaConnectionError,
     CuriosaError,
     CuriosaHttpError,
+    InfoItem,
     parse_catalog,
 )
 from .bindings import linked_entity
@@ -72,6 +73,9 @@ class CuriosaData:
     site_enabled: bool
     live: bool
     last_action: LastAction | None = None
+    # Informations des modules du site (vide pour un ancien site). Lecture seule :
+    # jamais ecrites sur disque ni renvoyees au site.
+    info: tuple[InfoItem, ...] = ()
 
 
 class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
@@ -240,7 +244,7 @@ class CuriosaCoordinator(DataUpdateCoordinator[CuriosaData]):
             await self._handle(action)
 
         self.set_interval()
-        return CuriosaData(result.enabled, result.live, self.last_action)
+        return CuriosaData(result.enabled, result.live, self.last_action, tuple(result.info or ()))
 
     async def _update_catalog(self, catalog: list[CatalogItem] | None) -> None:
         """Garde le catalogue du site (absent = ancien site = vide) ; ecrit seulement si change."""

@@ -7,6 +7,7 @@ d'appairage, le jeton, un curseur et un accuse a code ferme.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -19,6 +20,12 @@ from .const import (
     CODE_RE,
     DEFAULT_POLL_SECONDS,
     ID_RE,
+    INFO_KEY_RE,
+    INFO_LABEL_MAX_LENGTH,
+    INFO_MAX_ITEMS,
+    INFO_NUMBER_LIMIT,
+    INFO_UNIT_MAX_LENGTH,
+    INFO_VALUE_MAX_LENGTH,
     MAX_RESPONSE_BYTES,
     MAX_RETRY_AFTER_SECONDS,
     MIN_POLL_SECONDS,
@@ -89,6 +96,18 @@ class CatalogItem:
 
 
 @dataclass(frozen=True)
+class InfoItem:
+    """Une petite information d'un module du site : lecture seule, jamais renvoyee."""
+
+    key: str
+    label: str
+    # texte, nombre, booleen, ou None (le module n'a rien a dire pour l'instant)
+    value: str | int | float | bool | None
+    # seulement quand la valeur est un nombre
+    unit: str | None = None
+
+
+@dataclass(frozen=True)
 class PullResult:
     """Reponse de l'interrogation."""
 
@@ -99,6 +118,8 @@ class PullResult:
     actions: list[Action] = field(default_factory=list)
     # None = le site n'a pas envoye de catalogue (ancien site) ; [] = catalogue vide
     catalog: list[CatalogItem] | None = None
+    # None = le site n'a pas envoye d'informations (ancien site) ; [] = rien a dire
+    info: list[InfoItem] | None = None
 
 
 def parse_catalog(raw: object) -> list[CatalogItem] | None:
@@ -124,6 +145,52 @@ def parse_catalog(raw: object) -> list[CatalogItem] | None:
             continue
         seen.add(key)
         items.append(CatalogItem(key, clean_text(label, CATALOG_LABEL_MAX_LENGTH) or key))
+    return items
+
+
+def _info_value(raw: object) -> str | int | float | bool | None:
+    """Valeur d'une information : texte nettoye, nombre fini, booleen ; sinon None."""
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, int | float):
+        return raw if math.isfinite(raw) and abs(raw) < INFO_NUMBER_LIMIT else None
+    if isinstance(raw, str):
+        return clean_text(raw, INFO_VALUE_MAX_LENGTH) or None
+    return None  # null, objet, liste... : rien a montrer
+
+
+def parse_info(raw: object) -> list[InfoItem] | None:
+    """Valide les informations des modules : None si absent ou de mauvaise forme.
+
+    Strict : chaque element doit etre un objet avec une cle valide (minuscules exactes,
+    ``INFO_KEY_RE``) ; le libelle est re-nettoye ici (60 caracteres, a defaut la cle) ;
+    la valeur est un texte (120 caracteres), un nombre fini, un booleen ou rien ;
+    l'unite (12 caracteres) n'est gardee que pour un nombre. Les elements invalides et
+    les doublons (le premier gagne) sont ignores ; 20 au plus.
+    """
+    if not isinstance(raw, list):
+        return None
+    items: list[InfoItem] = []
+    seen: set[str] = set()
+    for entry in raw[:INFO_MAX_ITEMS]:
+        if not isinstance(entry, dict):
+            continue
+        key = entry.get("key")
+        if not isinstance(key, str) or not INFO_KEY_RE.fullmatch(key) or key in seen:
+            continue
+        seen.add(key)
+        value = _info_value(entry.get("value"))
+        unit = None
+        if isinstance(value, int | float) and not isinstance(value, bool):
+            unit = clean_text(entry.get("unit"), INFO_UNIT_MAX_LENGTH) or None
+        items.append(
+            InfoItem(
+                key,
+                clean_text(entry.get("label"), INFO_LABEL_MAX_LENGTH) or key,
+                value,
+                unit,
+            )
+        )
     return items
 
 
@@ -182,6 +249,7 @@ def parse_pull(payload: dict[str, Any]) -> PullResult:
         cursor=cursor if isinstance(cursor, int) and not isinstance(cursor, bool) else None,
         actions=actions,
         catalog=parse_catalog(payload.get("catalog")),
+        info=parse_info(payload.get("info")),
     )
 
 
