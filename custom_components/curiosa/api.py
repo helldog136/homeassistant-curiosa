@@ -153,7 +153,8 @@ def _info_value(raw: object) -> str | int | float | bool | None:
     if isinstance(raw, bool):
         return raw
     if isinstance(raw, int | float):
-        return raw if math.isfinite(raw) and abs(raw) < INFO_NUMBER_LIMIT else None
+        # abs() d'abord : un entier enorme (10**400) fait lever isfinite() un OverflowError
+        return raw if abs(raw) < INFO_NUMBER_LIMIT and math.isfinite(raw) else None
     if isinstance(raw, str):
         return clean_text(raw, INFO_VALUE_MAX_LENGTH) or None
     return None  # null, objet, liste... : rien a montrer

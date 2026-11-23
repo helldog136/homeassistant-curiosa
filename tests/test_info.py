@@ -111,7 +111,8 @@ def test_values() -> None:
     assert value(True) is True
     assert value(False) is False
     assert value(None) is None
-    for bad in ({"a": 1}, ["x"], [], {}, "", "   ", "<b></b>", 1e12, -1e12, 10**15, math.inf):
+    huge = (1e12, -1e12, 10**15, 10**400, -(10**400), math.inf)  # 10**400 : isfinite() leverait
+    for bad in ({"a": 1}, ["x"], [], {}, "", "   ", "<b></b>", *huge):
         assert value(bad) is None, bad
     [missing] = parse_info([{"key": "a"}]) or []
     assert missing.value is None
