@@ -33,9 +33,12 @@ La liste des actions vient de ton site (50 noms au plus). Elle est gardée ici p
 
 **Mise à jour depuis la 0.1.0** : automatique. Tes liaisons sont gardées telles quelles ; elles prennent le nom de ton site dès que celui-ci envoie sa liste d'actions, et restent visibles (« ancienne liaison ») si leur action n'y figure plus.
 
+### Informations des modules
+D'autres modules de ton site peuvent ajouter une petite information, par exemple le sponsor affiché en ce moment sur l'overlay du stream. Chacune apparaît comme un **capteur** de l'appareil Curiosa, avec le nom donné par le site, et se met à jour toute seule. C'est en **lecture seule** : Home Assistant ne fait que lire, et **rien de ta maison n'est envoyé**. Au plus 20 informations ; si une information disparaît du site, son capteur devient « indisponible » ; si le module n'a rien à dire pour l'instant, il est « inconnu ». Un site plus ancien qui n'envoie rien n'ajoute simplement aucun capteur.
+
 ### Sécurité, en clair
 - **Ce que Home Assistant envoie** : le code d'association (une fois), son jeton, et pour chaque action un accusé de réception avec un code court (`ok`, `unmapped`, `disabled`, `expired`, `error`). **Rien d'autre** : ni lumières, ni états, ni noms d'entités, ni liste, ni nom de la maison.
-- **Ce que Home Assistant reçoit** : un mot d'action et, pour la voix, un texte. Le texte est nettoyé une seconde fois ici (300 caractères max, balisage, adresses web et caractères cachés retirés).
+- **Ce que Home Assistant reçoit** : un mot d'action et, pour la voix, un texte, plus les petites informations des modules (texte nettoyé, 120 caractères max). Le texte est nettoyé une seconde fois ici (300 caractères max, balisage, adresses web et caractères cachés retirés).
 - **Interrupteur « Curiosa actif »** : coupé, rien n'est exécuté, même si Curiosa envoie. Les actions reçues sont refusées avec le code `disabled` et Home Assistant continue de se signaler toutes les 30 secondes.
 - **Expiration** : une action trop vieille (60 s par défaut côté site, 5 s de tolérance) n'est pas jouée. Une même action n'est jamais jouée deux fois.
 - **Connexion** : https obligatoire. Les adresses locales ne passent qu'avec le « mode test ». Le jeton n'apparaît ni dans les journaux ni dans les diagnostics.
@@ -75,9 +78,12 @@ The action list comes from your site (50 names at most). It is kept here so the 
 
 **Updating from 0.1.0**: automatic. Your links are kept as they are; they take the name from your site as soon as it sends its action list, and stay visible ("old link") if their action is no longer in it.
 
+### Module information
+Other modules of your site can add a small piece of information, for example the sponsor currently shown on the stream overlay. Each one appears as a **sensor** of the Curiosa device, named by the site, and updates by itself. It is **read only**: Home Assistant only reads, and **nothing from your house is sent**. 20 pieces of information at most; if one disappears from the site, its sensor becomes "unavailable"; if the module has nothing to say right now, it is "unknown". An older site that sends nothing simply adds no sensor.
+
 ### Security in plain words
 - **What Home Assistant sends**: the pairing code (once), its key, and for each action a receipt with a short code (`ok`, `unmapped`, `disabled`, `expired`, `error`). **Nothing else**: no lights, no states, no entity names, no lists, no house name.
-- **What Home Assistant receives**: an action word and, for voice, a text. The text is cleaned a second time here (300 characters max, markup, web addresses and hidden characters removed).
+- **What Home Assistant receives**: an action word and, for voice, a text, plus the small pieces of module information (cleaned text, 120 characters max). The text is cleaned a second time here (300 characters max, markup, web addresses and hidden characters removed).
 - **"Curiosa active" switch**: when off, nothing is run, even if Curiosa sends. Received actions are refused with code `disabled`, and Home Assistant keeps checking in every 30 seconds.
 - **Expiry**: an action that is too old (60 s by default on the site, 5 s tolerance) is not played. The same action is never played twice.
 - **Connection**: https is required. Local addresses only work in "test mode". The key never appears in logs or diagnostics.

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 DOMAIN = "curiosa"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 # Donnees de l'entree de configuration
 CONF_URL = "url"
@@ -42,6 +42,15 @@ CATALOG_LABEL_MAX_LENGTH = 60
 STORE_ENABLED = "enabled"
 STORE_CATALOG = "catalog"
 MAX_ISSUES = 20  # reparations ouvertes en meme temps (une par action)
+
+# Informations des modules (liste que le site peut envoyer : un capteur par cle)
+INFO_MAX_ITEMS = 20
+INFO_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9._:-]{0,59}$")
+INFO_LABEL_MAX_LENGTH = 60
+INFO_VALUE_MAX_LENGTH = 120
+INFO_UNIT_MAX_LENGTH = 12
+INFO_NUMBER_LIMIT = 1e12  # valeur absolue : strictement en dessous
+INFO_UNIQUE_PREFIX = "info_"  # unique_id : <entry_id>_info_<cle>
 
 # Nom envoye a l'appairage : fixe, jamais le nom de la maison
 DEVICE_NAME = "Home Assistant"

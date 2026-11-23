@@ -32,6 +32,7 @@ class FakeCuriosa:
         self.requests: list[dict[str, Any]] = []
         self.acks: list[dict[str, Any]] = []
         self.catalog: Any = None  # None = ancien site (champ absent)
+        self.info: Any = None  # None = ancien site (champ absent)
         self.pull_status: int | None = None
         self.retry_after: str | None = None
         self.ack_status = 200
@@ -119,6 +120,8 @@ class FakeCuriosa:
         }
         if self.catalog is not None:
             payload["catalog"] = self.catalog
+        if self.info is not None:
+            payload["info"] = self.info
         return web.json_response(payload)
 
     async def ack(self, request: web.Request) -> web.Response:
